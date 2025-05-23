@@ -1,0 +1,9 @@
+# This is a CODEOWNERS file.
+# Lines starting with '#' are comments.
+
+# Set 'abc_22' as the mandatory code owner for the 'main' branch.
+# The pattern should match the branch name (or files/directories).
+# In this case, '*' matches all files and directories in the repository.
+# The owner is specified after the pattern.
+
+* @AMish03
