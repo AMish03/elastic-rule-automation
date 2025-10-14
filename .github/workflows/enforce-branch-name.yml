@@ -6,48 +6,31 @@ on:
 
 jobs:
   enforce-branch-name:
-    # Set necessary permissions for the GITHUB_TOKEN to delete the branch
-    permissions:
-      contents: read
-      # Required for 'git push origin --delete'
-      # You might also need 'branches: write' depending on your security settings
-      # The default 'write' for 'contents' usually handles push, but be explicit.
-      # If the default GITHUB_TOKEN doesn't work, you'll need a PAT.
-      
     runs-on: ubuntu-latest
+    # You MUST still define permissions for the token to work
+    permissions:
+      contents: write 
+      
     steps:
-      - name: Checkout repository (Required for git commands)
-        uses: actions/checkout@v4
-        # Note: Checkout is generally used for 'push' or 'pull_request'. 
-        # For 'create' on a branch, you just need a place to run git commands. 
-        # While checkout is safe, a simpler fix is to skip the local git setup. 
-        # See alternative fix below if this doesn't work.
-        
+      - name: Initialize dummy git repo
+        run: git init # Needed to run subsequent git commands
+
       - name: Check branch name and delete if invalid
         env:
           BRANCH_REF: ${{ github.ref }}
-          # Set the token for the git push command to use
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The GITHUB_TOKEN is automatically available
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
         run: |
-          # 1. Define the PATTERN.
-          # The branch name format is 'feature/AB#1234'
           PATTERN='^refs/heads/feature/AB#[0-9]+$'
-
+          
           if [[ ! "$BRANCH_REF" =~ $PATTERN ]]; then
-            echo "Branch name $BRANCH_REF does not match pattern. Deleting branch..."
-            
             BRANCH_NAME="${BRANCH_REF#refs/heads/}"
             echo "Attempting to delete remote branch: $BRANCH_NAME"
             
-            # 2. Configure Git with the token before pushing
-            git config --global user.email "action@github.com"
-            git config --global user.name "GitHub Action"
-            
-            # 3. Use the token in the push URL
-            # This is the standard way to push from a GitHub Action
+            # --- The critical fix is here ---
             REMOTE_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
             
-            # 4. Delete the branch remotely
+            # Delete the branch using the token in the URL
             git push "$REMOTE_URL" --delete "$BRANCH_NAME"
             
             exit 1
