@@ -20,5 +20,5 @@ jobs:
             git push origin --delete "$BRANCH_NAME"
             exit 1
           else
-            echo "Branch name is valid."
+            echo "Branch name is valid.  "
           fi
